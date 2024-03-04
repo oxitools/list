@@ -1,5 +1,15 @@
 {
   "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@oxi/core@^0.2.0": "jsr:@oxi/core@0.2.0"
+    },
+    "jsr": {
+      "@oxi/core@0.2.0": {
+        "integrity": "c208de63ef72e9d0356ba0905b7442804a65c433b395af2db5fbdbcf5d59fb76"
+      }
+    }
+  },
   "remote": {
     "https://deno.land/std@0.212.0/assert/_constants.ts": "a271e8ef5a573f1df8e822a6eb9d09df064ad66a4390f21b3e31f820a38e0975",
     "https://deno.land/std@0.212.0/assert/_diff.ts": "dcc63d94ca289aec80644030cf88ccbf7acaa6fbd7b0f22add93616b36593840",
@@ -33,5 +43,10 @@
     "https://deno.land/std@0.212.0/assert/unimplemented.ts": "47ca67d1c6dc53abd0bd729b71a31e0825fc452dbcd4fde4ca06789d5644e7fd",
     "https://deno.land/std@0.212.0/assert/unreachable.ts": "38cfecb95d8b06906022d2f9474794fca4161a994f83354fd079cac9032b5145",
     "https://deno.land/std@0.212.0/fmt/colors.ts": "71e2d7d9911cf3f4f8cceaabe588fd9a4c0228102f4233da62ffd3e421201de7"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@oxi/core@^0.2.0"
+    ]
   }
 }

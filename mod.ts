@@ -1,25 +1,4 @@
-function assert(
-  // deno-lint-ignore no-explicit-any
-  condition: any,
-  message = "Assertion failed"
-): asserts condition {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function isDefined<T>(value: T): value is NonNullable<T> {
-  return typeof value !== "undefined" && value !== null;
-}
-
-/**
- * Type guard to check if an object is iterable.
- * @param {unknown} obj The object to check.
- * @returns {obj is Iterable<unknown>} True if the object is iterable, false otherwise.
- */
-function isIterable(obj: unknown): obj is Iterable<unknown> {
-  return typeof obj === "object" && obj !== null && Symbol.iterator in obj;
-}
+import { assert, isDefined, isIterable } from "@oxi/core";
 
 const proto = Array.prototype;
 
@@ -113,7 +92,7 @@ export class List<T> implements Iterable<T> {
    * const rangeList = List.range(1, 4); // [1, 2, 3]
    * ```
    */
-  static range(from: number, to: number, step = 1): List<number> {
+  static range(from: number, to: number, step: number = 1): List<number> {
     assert(step > 0, "'step' must be a positive number.");
     const result: number[] = [];
     for (let i = from; i < to; i += step) {
@@ -204,7 +183,7 @@ export class List<T> implements Iterable<T> {
     if (deep) {
       assert(
         SUPPORTS_CLONE,
-        "Deep cloning is not supported in this environment. To perform a deep clone, ensure 'structuredClone' is available."
+        "Deep cloning is not supported in this environment. To perform a deep clone, ensure 'structuredClone' is available.",
       );
       return new List(structuredClone(this.#array));
     }
@@ -285,7 +264,7 @@ export class List<T> implements Iterable<T> {
    * ```
    */
   countBy<K extends string>(
-    callback: (item: T, index: number) => K
+    callback: (item: T, index: number) => K,
   ): Record<K, number> {
     assert(typeof callback === "function", "'callback' must be a function.");
     const obj = Object.create(null) as Record<K, number>;
@@ -441,7 +420,7 @@ export class List<T> implements Iterable<T> {
   }
 
   filter<U extends T>(
-    predicate: (item: T, index: number) => item is U
+    predicate: (item: T, index: number) => item is U,
   ): List<U>;
 
   filter(predicate: (item: T, index: number) => boolean): List<T>;
@@ -489,7 +468,7 @@ export class List<T> implements Iterable<T> {
    * ```
    */
   findIndex(
-    predicate: (item: T, index: number) => boolean
+    predicate: (item: T, index: number) => boolean,
   ): number | undefined {
     assert(typeof predicate === "function", "'predicate' must be a function.");
     const index = this.#array.findIndex(predicate);
@@ -536,7 +515,7 @@ export class List<T> implements Iterable<T> {
    * ```
    */
   findLastIndex(
-    predicate: (item: T, index: number) => boolean
+    predicate: (item: T, index: number) => boolean,
   ): number | undefined {
     assert(typeof predicate === "function", "'predicate' must be a function.");
     if (SUPPORTS_FIND_LAST_INDEX) {
@@ -598,7 +577,7 @@ export class List<T> implements Iterable<T> {
    * ```
    */
   flatMap<U>(
-    callback: (item: T, index: number) => U | ReadonlyArray<U>
+    callback: (item: T, index: number) => U | ReadonlyArray<U>,
   ): List<U> {
     assert(typeof callback === "function", "'callback' must be a function.");
     return new List(this.#array.flatMap(callback));
@@ -617,7 +596,7 @@ export class List<T> implements Iterable<T> {
    * ```
    */
   groupBy<K extends string>(
-    callback: (item: T, index: number) => K
+    callback: (item: T, index: number) => K,
   ): Record<K, T[]> {
     assert(typeof callback === "function", "'callback' must be a function.");
     const group = Object.create(null) as Record<K, T[]>;
@@ -837,7 +816,7 @@ export class List<T> implements Iterable<T> {
    */
   reduceRight<U>(
     initialValue: U,
-    callback: (accumulator: U, current: T) => U
+    callback: (accumulator: U, current: T) => U,
   ): U {
     assert(typeof callback === "function", "'callback' must be a function.");
     return this.#array.reduceRight(callback, initialValue);
@@ -1166,7 +1145,7 @@ export class List<T> implements Iterable<T> {
    * ```
    */
   uniqueBy<K extends string | number>(
-    callback: (item: T, index: number) => K
+    callback: (item: T, index: number) => K,
   ): List<T> {
     assert(typeof callback === "function", "'callback' must be a function.");
     const keySet = new Set<K>();
