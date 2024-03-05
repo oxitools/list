@@ -1,3 +1,72 @@
+/**
+ * The List<T> Module: Immutable Collection Library
+ *
+ * This module introduces the List<T> class, an immutable collection designed with a functional programming approach
+ * in TypeScript. It's ideal for scenarios where immutability is paramount, providing a rich set of methods for
+ * list manipulation and querying without mutating the original data.
+ *
+ * Key Features:
+ * - Immutability: Ensures safe operations by returning new instances for each operation, leaving the original list untouched.
+ * - Comprehensive API: From basic operations like `map` and `filter` to more specialized ones like `compact`, `shuffle`, and `groupBy`.
+ * - Type Safety: Fully leverages TypeScript's type system for enhanced code reliability.
+ * - Iterable Compatibility: Conforms to the Iterable protocol, allowing seamless integration with JavaScript's iteration constructs.
+ *
+ * Usage Examples:
+ *
+ * Creating and Manipulating Lists:
+ * ```typescript
+ * const nums = List.of(1, 2, 3, null, 4, undefined, 5);
+ * const words = List.of("apple", "banana", "cherry", "date");
+ * ```
+ *
+ * Compact - Remove `null` and `undefined` values:
+ * ```typescript
+ * const compactedNums = nums.compact(); // [1, 2, 3, 4, 5]
+ * ```
+ *
+ * Shuffle - Randomize the order of elements:
+ * ```typescript
+ * const shuffledWords = words.shuffle();
+ * console.log(shuffledWords.toArray()); // ["banana", "apple", "date", "cherry"] (order is random)
+ * ```
+ *
+ * GroupBy - Organize items into groups based on a callback function:
+ * ```typescript
+ * const groupedByLength = words.groupBy(word => word.length);
+ * console.log(groupedByLength); // { '5': ["apple"], '6': ["banana", "cherry"], '4': ["date"] }
+ * ```
+ *
+ * Combining Methods - Chain multiple methods together:
+ * ```typescript
+ * const transformedNums = nums.compact().map(x => x * 2).filter(x => x > 5);
+ * console.log(transformedNums.toArray()); // [6, 8, 10], assuming compacted to [1, 2, 3, 4, 5] initially
+ * ```
+ *
+ * Advanced Operations:
+ *
+ * Zip - Combine two lists into a list of pairs:
+ * ```typescript
+ * const moreNums = List.of(6, 7, 8);
+ * const zippedLists = nums.zip(moreNums);
+ * console.log(zippedLists.toArray()); // [[1, 6], [2, 7], [3, 8]]
+ * ```
+ *
+ * Unique & UniqueBy - Deduplicate elements:
+ * ```typescript
+ * const duplicates = List.of(1, 2, 2, 3, 3, 3);
+ * const uniqueNums = duplicates.unique();
+ * console.log(uniqueNums.toArray()); // [1, 2, 3]
+ *
+ * const people = List.of({ id: 1, name: "Alice" }, { id: 2, name: "Bob" }, { id: 1, name: "Alice" });
+ * const uniquePeople = people.uniqueBy(person => person.id);
+ * console.log(uniquePeople.toArray()); // [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }]
+ * ```
+ *
+ * The `List<T>` class offers a functional, chainable API for elegant and expressive list operations. It's a powerful
+ * tool for developers who prefer immutable data structures and functional programming techniques.
+ * @module
+ */
+
 import { assert, isDefined, isIterable } from "@oxi/core";
 
 const proto = Array.prototype;
