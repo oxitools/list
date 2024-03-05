@@ -1,6 +1,9 @@
 {
   "name": "@oxi/list",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "exports": "./mod.ts",
-  "imports": { "@oxi/core": "jsr:@oxi/core@^0.2.0" }
+  "imports": {
+    "@oxi/core": "jsr:@oxi/core@^0.2.0",
+    "@oxi/option": "jsr:@oxi/option@^0.1.0"
+  }
 }

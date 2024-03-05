@@ -1,3 +1,5 @@
+import { isDefined } from "@oxi/core";
+import { Option } from "@oxi/option";
 import {
   assert,
   assertEquals,
@@ -5,6 +7,20 @@ import {
   assertNotEquals,
 } from "https://deno.land/std@0.212.0/assert/mod.ts";
 import { List } from "./mod.ts";
+
+function assertSome<T>(
+  option: Option<T>,
+  value?: T,
+): asserts option is Option<T> {
+  assert(option.isSome(), "expected Some, got None");
+  if (isDefined(value)) {
+    assertEquals(option.unwrap(), value);
+  }
+}
+
+function assertNone<T>(option: Option<T>): asserts option is Option<T> {
+  assertFalse(option.isSome(), "expected None, got Some");
+}
 
 Deno.test("List#empty", () => {
   const list = List.empty<number>();
@@ -42,15 +58,15 @@ Deno.test("List.append", () => {
 
 Deno.test("List.at", () => {
   const list = List.of(1, 2, 3);
-  assertEquals(list.at(1), 2);
-  assertEquals(list.at(3), undefined);
+  assertSome(list.at(1), 2);
+  assertNone(list.at(3));
 });
 
 Deno.test("List.clone (shallow)", () => {
   const item = { a: 1 };
   const list = List.of(item);
   const clone = list.clone();
-  assert(Object.is(clone.at(0), item));
+  assert(Object.is(clone.at(0).unwrap(), item));
 });
 
 Deno.test("List.clone (deep)", () => {
@@ -58,7 +74,7 @@ Deno.test("List.clone (deep)", () => {
   const list = List.of(item);
   const clone = list.clone(true);
   assert(!Object.is(clone.at(0), item));
-  assertEquals(clone.at(0), item);
+  assertSome(clone.at(0), item);
 });
 
 Deno.test("List.compact", () => {
@@ -131,7 +147,7 @@ Deno.test("List.enumerate", () => {
       [0, 1],
       [1, 2],
       [2, 3],
-    ]
+    ],
   );
 });
 
@@ -149,48 +165,48 @@ Deno.test("List.filter", () => {
 
 Deno.test("List.find", () => {
   const list = List.of(1, 2, 3, 4, 5);
-  const result = list.find((x) => x % 2 === 0);
-  assertEquals(result, 2);
+  let result = list.find((x) => x % 2 === 0);
+  assertSome(result, 2);
 
-  const result2 = list.find((x) => x === 6);
-  assertEquals(result2, undefined);
+  result = list.find((x) => x === 6);
+  assertNone(result);
 });
 
 Deno.test("List.findIndex", () => {
   const list = List.of(1, 2, 3, 4, 5);
-  const result = list.findIndex((x) => x % 2 === 0);
-  assertEquals(result, 1);
+  let result = list.findIndex((x) => x % 2 === 0);
+  assertSome(result, 1);
 
-  const result2 = list.findIndex((x) => x === 6);
-  assertEquals(result2, undefined);
+  result = list.findIndex((x) => x === 6);
+  assertNone(result);
 });
 
 Deno.test("List.findLast", () => {
   const list = List.of(1, 2, 3, 4, 5);
-  const result = list.findLast((x) => x % 2 === 0);
-  assertEquals(result, 4);
+  let result = list.findLast((x) => x % 2 === 0);
+  assertSome(result, 4);
 
-  const result2 = list.findLast((x) => x === 6);
-  assertEquals(result2, undefined);
+  result = list.findLast((x) => x === 6);
+  assertNone(result);
 });
 
 Deno.test("List.findLastIndex", () => {
   const list = List.of(1, 2, 3, 4, 5);
-  const result = list.findLastIndex((x) => x % 2 === 0);
-  assertEquals(result, 3);
+  let result = list.findLastIndex((x) => x % 2 === 0);
+  assertSome(result, 3);
 
-  const result2 = list.findLastIndex((x) => x === 6);
-  assertEquals(result2, undefined);
+  result = list.findLastIndex((x) => x === 6);
+  assertNone(result);
 });
 
 Deno.test("List.first", () => {
-  const list = List.of(1, 2, 3);
-  const result = list.first();
-  assertEquals(result, 1);
+  let list = List.of(1, 2, 3);
+  let result = list.first();
+  assertSome(result, 1);
 
-  const list2 = List.empty<number>();
-  const result2 = list2.first();
-  assertEquals(result2, undefined);
+  list = List.empty<number>();
+  result = list.first();
+  assertNone(result);
 });
 
 Deno.test("List.flat", () => {
@@ -211,7 +227,7 @@ Deno.test("List.groupBy", () => {
     { type: "banana" },
     {
       type: "apple",
-    }
+    },
   );
   const result = list.groupBy((x) => x.type);
   assertEquals(result, {
@@ -259,13 +275,13 @@ Deno.test("List.isNotEmpty", () => {
 });
 
 Deno.test("List.last", () => {
-  const list = List.of(1, 2, 3);
-  const result = list.last();
-  assertEquals(result, 3);
+  let list = List.of(1, 2, 3);
+  let result = list.last();
+  assertSome(result, 3);
 
-  const list2 = List.empty<number>();
-  const result2 = list2.last();
-  assertEquals(result2, undefined);
+  list = List.empty<number>();
+  result = list.last();
+  assertNone(result);
 });
 
 Deno.test("List.map", () => {
@@ -293,14 +309,15 @@ Deno.test("List.prepend", () => {
 
 Deno.test("List.random should return an element from the list", () => {
   const list = List.from([1, 2, 3]);
-  const randomElement = list.random()!;
-  assert(list.has(randomElement));
+  const randomElement = list.random();
+  assertSome(randomElement);
+  assert(list.has(randomElement.unwrap()));
 });
 
 Deno.test("List.random should return undefined for an empty list", () => {
   const emptyList = List.empty<number>();
   const randomElement = emptyList.random();
-  assertEquals(randomElement, undefined);
+  assertNone(randomElement);
 });
 
 Deno.test(
@@ -310,18 +327,19 @@ Deno.test(
     const elementCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
     const iterations = 10000;
     for (let i = 0; i < iterations; i++) {
-      const randomElement = list.random()!;
-      elementCounts[randomElement]++;
+      const randomElement = list.random();
+      assertSome(randomElement);
+      elementCounts[randomElement.unwrap()]++;
     }
 
     Object.values(elementCounts).forEach((count) => {
       const expectedCount = iterations / list.size;
       const tolerance = 0.05 * expectedCount; // Allow 5% tolerance
       assert(
-        count > expectedCount - tolerance && count < expectedCount + tolerance
+        count > expectedCount - tolerance && count < expectedCount + tolerance,
       );
     });
-  }
+  },
 );
 
 Deno.test("List.reduce", () => {
@@ -477,12 +495,12 @@ Deno.test("List.updateAt", () => {
     { name: "Bob" },
     {
       name: "Charlie",
-    }
+    },
   );
   const result = list.updateAt(1, (x) => ({ ...x, name: "Robert" }));
   assertEquals(
     [...result],
-    [{ name: "Alice" }, { name: "Robert" }, { name: "Charlie" }]
+    [{ name: "Alice" }, { name: "Robert" }, { name: "Charlie" }],
   );
 });
 
@@ -496,6 +514,6 @@ Deno.test("List.zip", () => {
       [1, "a"],
       [2, "b"],
       [3, "c"],
-    ]
+    ],
   );
 });

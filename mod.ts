@@ -1,14 +1,14 @@
 /**
- * The List<T> Module: Immutable Collection Library
- *
  * This module introduces the List<T> class, an immutable collection designed with a functional programming approach
  * in TypeScript. It's ideal for scenarios where immutability is paramount, providing a rich set of methods for
- * list manipulation and querying without mutating the original data.
+ * list manipulation and querying without mutating the original data. Recent updates have enhanced the API to return
+ * `Option<T>` types for methods where a value might not be present, ensuring even greater type safety and adherence
+ * to functional programming principles.
  *
  * Key Features:
  * - Immutability: Ensures safe operations by returning new instances for each operation, leaving the original list untouched.
- * - Comprehensive API: From basic operations like `map` and `filter` to more specialized ones like `compact`, `shuffle`, and `groupBy`.
- * - Type Safety: Fully leverages TypeScript's type system for enhanced code reliability.
+ * - Comprehensive API: From basic operations like `map` and `filter` to more specialized ones like `compact`, `shuffle`, and `groupBy`, now with `Option<T>` for safer access.
+ * - Enhanced Type Safety: Leverages `Option<T>` to explicitly handle the presence or absence of values.
  * - Iterable Compatibility: Conforms to the Iterable protocol, allowing seamless integration with JavaScript's iteration constructs.
  *
  * Usage Examples:
@@ -24,10 +24,11 @@
  * const compactedNums = nums.compact(); // [1, 2, 3, 4, 5]
  * ```
  *
- * Shuffle - Randomize the order of elements:
+ * Shuffle - Randomize the order of elements, demonstrating `Option<T>`:
  * ```typescript
  * const shuffledWords = words.shuffle();
- * console.log(shuffledWords.toArray()); // ["banana", "apple", "date", "cherry"] (order is random)
+ * const randomWord = shuffledWords.random();
+ * console.log(randomWord.isSome() ? randomWord.unwrap() : "List is empty");
  * ```
  *
  * GroupBy - Organize items into groups based on a callback function:
@@ -36,10 +37,13 @@
  * console.log(groupedByLength); // { '5': ["apple"], '6': ["banana", "cherry"], '4': ["date"] }
  * ```
  *
- * Combining Methods - Chain multiple methods together:
+ * Accessing Elements with `Option<T>`:
  * ```typescript
- * const transformedNums = nums.compact().map(x => x * 2).filter(x => x > 5);
- * console.log(transformedNums.toArray()); // [6, 8, 10], assuming compacted to [1, 2, 3, 4, 5] initially
+ * const firstNum = nums.first();
+ * console.log(firstNum.isSome() ? `First number: ${firstNum.unwrap()}` : "List is empty");
+ *
+ * const lastWord = words.last();
+ * console.log(lastWord.isSome() ? `Last word: ${lastWord.unwrap()}` : "List is empty");
  * ```
  *
  * Advanced Operations:
@@ -62,12 +66,12 @@
  * console.log(uniquePeople.toArray()); // [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }]
  * ```
  *
- * The `List<T>` class offers a functional, chainable API for elegant and expressive list operations. It's a powerful
- * tool for developers who prefer immutable data structures and functional programming techniques.
+ * The `List<T>` class offers a functional, chainable API for elegant and expressive list operations, now enhanced with `Option<T>` for methods that might not always have a return value. It's a powerful tool for developers who prefer immutable data structures and functional programming techniques.
  * @module
  */
 
 import { assert, isDefined, isIterable } from "@oxi/core";
+import { Option } from "@oxi/option";
 
 const proto = Array.prototype;
 
@@ -196,24 +200,35 @@ export class List<T> implements Iterable<T> {
 
   /**
    * Retrieves the element at the specified index. Negative indices count from the end of the list.
+   * Wraps the result in an `Option<T>`, which is `Some<T>` if an element is found, or `None` if the index is out of bounds.
    *
    * @param {number} index The index of the element to retrieve. Supports negative indices.
-   * @return {T | undefined} The element at the specified index or undefined if out of bounds.
+   * @return {Option<T>} An `Option<T>` containing the element at the specified index or `None` if out of bounds.
    * @example
    * ```ts
    * const list = List.of(1, 2, 3);
-   * const item = list.at(-1); // 3
-   * const outOfBounds = list.at(10); // undefined
+   * const itemOption = list.at(-1); // Some(3)
+   * const outOfBoundsOption = list.at(10); // None
+   *
+   * // Using the Option value
+   * if (itemOption.isSome()) {
+   *   console.log(itemOption.unwrap()); // 3
+   * } else {
+   *   console.log("Item not found");
+   * }
+   *
+   * // Providing a default value with the same type
+   * console.log(outOfBoundsOption.unwrapOr(0)); // 0
    * ```
    */
-  at(index: number): T | undefined {
+  at(index: number): Option<T> {
     if (SUPPORTS_AT) {
-      return this.#array.at(index);
+      return Option.from(this.#array.at(index));
     }
     if (index < 0) {
       index = this.size + index;
     }
-    return this.#array[index];
+    return Option.from(this.#array[index]);
   }
 
   /**
@@ -511,109 +526,154 @@ export class List<T> implements Iterable<T> {
 
   /**
    * Finds the first element in the list satisfying a predicate, if any.
+   * Wraps the result in an `Option<T>`, which is `Some<T>` if an element is found that satisfies the predicate, or `None` if no such element exists.
    *
    * @param {(item: T, index: number) => boolean} predicate A function to execute on each value in the list.
-   * @return {T | undefined} The first element in the array that satisfies the predicate; otherwise, undefined.
+   * @return {Option<T>} An `Option<T>` containing the first element that satisfies the predicate, or `None` if no such element is found.
    * @example
    * ```ts
-   * const found = List.of(1, 2, 3).find(item => item > 1); // 2
-   * const notFound = List.of(1, 2, 3).find(item => item > 3); // undefined
+   * const list = List.of(1, 2, 3);
+   *
+   * // Using the Option for a found element
+   * const foundOption = list.find(item => item > 1);
+   * console.log(foundOption.isSome() ? foundOption.unwrap() : "No match found"); // 2
+   *
+   * // Using the Option for a not found element
+   * const notFoundOption = list.find(item => item > 3);
+   * console.log(notFoundOption.isSome() ? notFoundOption.unwrap() : "No match found"); // "No match found"
    * ```
    */
-  find(predicate: (item: T, index: number) => boolean): T | undefined {
+  find(predicate: (item: T, index: number) => boolean): Option<T> {
     assert(typeof predicate === "function", "'predicate' must be a function.");
-    return this.#array.find(predicate);
+    return Option.from(this.#array.find(predicate));
   }
 
   /**
    * Finds the index of the first element in the list that satisfies the provided testing function.
+   * Wraps the result in an `Option<number>`, which is `Some<number>` if an element satisfying the predicate is found,
+   * or `None` if no such element exists.
    *
    * @param {(item: T, index: number) => boolean} predicate A function to execute on each value in the list.
-   * @return {number | undefined} The index of the first element in the array that passes the test; otherwise, undefined.
+   * @return {Option<number>} An `Option<number>` containing the index of the first element that passes the test,
+   * or `None` if no element satisfies the predicate.
    * @example
    * ```ts
-   * const index = List.of(1, 2, 3).findIndex(item => item > 1); // 1
-   * const notFound = List.of(1, 2, 3).findIndex(item => item > 3); // undefined
+   * const list = List.of(1, 2, 3);
+   *
+   * // Using the Option for a found index
+   * const indexOption = list.findIndex(item => item > 1);
+   * console.log(indexOption.isSome() ? `Found at index: ${indexOption.unwrap()}` : "No match found"); // Found at index: 1
+   *
+   * // Using the Option for a not found index
+   * const notFoundOption = list.findIndex(item => item > 3);
+   * console.log(notFoundOption.isSome() ? `Found at index: ${notFoundOption.unwrap()}` : "No match found"); // No match found
    * ```
    */
   findIndex(
     predicate: (item: T, index: number) => boolean,
-  ): number | undefined {
+  ): Option<number> {
     assert(typeof predicate === "function", "'predicate' must be a function.");
     const index = this.#array.findIndex(predicate);
     if (index < 0) {
-      return undefined;
+      return Option.None;
     }
-    return index;
+    return Option.Some(index);
   }
 
   /**
    * Finds the last element in the list satisfying a predicate, if any.
+   * Wraps the result in an `Option<T>`, which is `Some<T>` if an element is found that satisfies the predicate from the end of the list,
+   * or `None` if no such element exists.
    *
    * @param {(item: T, index: number) => boolean} predicate A function to execute on each value in the list, from last to first.
-   * @return {T | undefined} The last element in the array that satisfies the predicate; otherwise, undefined.
+   * @return {Option<T>} An `Option<T>` containing the last element that satisfies the predicate, or `None` if no such element is found.
    * @example
    * ```ts
-   * const found = List.of(1, 2, 3, 2).findLast(item => item > 1); // 3
-   * const notFound = List.of(1, 2, 3).findLast(item => item > 3); // undefined
+   * const list = List.of(1, 2, 3, 2);
+   *
+   * // Using the Option for a found element
+   * const foundOption = list.findLast(item => item > 1);
+   * console.log(foundOption.isSome() ? foundOption.unwrap() : "No match found"); // 2
+   *
+   * // Using the Option for a not found element
+   * const notFoundOption = list.findLast(item => item > 3);
+   * console.log(notFoundOption.isSome() ? foundOption.unwrap() : "No match found"); // "No match found"
    * ```
    */
-  findLast(predicate: (item: T, index: number) => boolean): T | undefined {
+  findLast(predicate: (item: T, index: number) => boolean): Option<T> {
     assert(typeof predicate === "function", "'predicate' must be a function.");
     if (SUPPORTS_FIND_LAST) {
-      return this.#array.findLast(predicate);
+      return Option.from(this.#array.findLast(predicate));
     }
     for (let i = this.size - 1; i >= 0; i--) {
       const item = this.#array[i];
       if (predicate(item, i)) {
-        return item;
+        return Option.Some(item);
       }
     }
-    return undefined;
+    return Option.None;
   }
 
   /**
    * Finds the index of the last element in the list that satisfies the provided testing function.
+   * Wraps the result in an `Option<number>`, which is `Some<number>` if an index is found that satisfies the predicate from the end of the list,
+   * or `None` if no such index exists.
    *
    * @param {(item: T, index: number) => boolean} predicate A function to execute on each value in the list, from last to first.
-   * @return {number | undefined} The index of the last element in the array that passes the test; otherwise, undefined.
+   * @return {Option<number>} An `Option<number>` containing the index of the last element that passes the test,
+   * or `None` if no element satisfies the predicate.
    * @example
    * ```ts
-   * const index = List.of(1, 2, 3, 2).findLastIndex(item => item > 1); // 3
-   * const notFound = List.of(1, 2, 3).findLastIndex(item => item > 3); // undefined
+   * const list = List.of(1, 2, 3, 2);
+   *
+   * // Using the Option for a found index
+   * const indexOption = list.findLastIndex(item => item > 1);
+   * console.log(indexOption.isSome() ? `Found at index: ${indexOption.unwrap()}` : "No match found"); // Found at index: 3
+   *
+   * // Using the Option for a not found index
+   * const notFoundOption = list.findLastIndex(item => item > 3);
+   * console.log(notFoundOption.isSome() ? `Found at index: ${notFoundOption.unwrap()}` : "No match found"); // "No match found"
    * ```
    */
   findLastIndex(
     predicate: (item: T, index: number) => boolean,
-  ): number | undefined {
+  ): Option<number> {
     assert(typeof predicate === "function", "'predicate' must be a function.");
     if (SUPPORTS_FIND_LAST_INDEX) {
       const index = this.#array.findLastIndex(predicate);
       if (index < 0) {
-        return undefined;
+        return Option.None;
       }
-      return index;
+      return Option.Some(index);
     }
     for (let i = this.size - 1; i >= 0; i--) {
       const item = this.#array[i];
       if (predicate(item, i)) {
-        return i;
+        return Option.Some(i);
       }
     }
-    return undefined;
+    return Option.None;
   }
 
   /**
-   * Returns the first element of the list, or undefined if the list is empty.
+   * Returns the first element of the list wrapped in an `Option<T>`. If the list is empty, it returns `None`.
    *
-   * @return {T | undefined} The first element of the list, or undefined if the list is empty.
+   * @return {Option<T>} An `Option<T>` containing the first element of the list if the list is not empty, or `None` if the list is empty.
    * @example
    * ```ts
-   * const first = List.of(1, 2, 3).first(); // 1
-   * const empty = List.empty().first(); // undefined
+   * const list = List.of(1, 2, 3);
+   *
+   * // Using the Option for the first element
+   * const firstOption = list.first();
+   * console.log(firstOption.isSome() ? firstOption.unwrap() : "List is empty"); // 1
+   *
+   * // Using the Option for an empty list
+   * const emptyList = List.empty<number>();
+   * const emptyOption = emptyList.first();
+   * console.log(emptyOption.isSome() ? emptyOption.unwrap() : "List is empty"); // "List is empty"
    * ```
    */
-  first(): T | undefined {
+  first(): Option<T> {
     return this.at(0);
   }
 
@@ -767,16 +827,24 @@ export class List<T> implements Iterable<T> {
   }
 
   /**
-   * Returns the last element of the list, or undefined if the list is empty.
+   * Returns the last element of the list wrapped in an `Option<T>`. If the list is empty, it returns `None`.
    *
-   * @return {T | undefined} The last element of the list, or undefined if the list is empty.
+   * @return {Option<T>} An `Option<T>` containing the last element of the list if the list is not empty, or `None` if the list is empty.
    * @example
    * ```ts
-   * const last = List.of(1, 2, 3).last(); // 3
-   * const empty = List.empty().last(); // undefined
+   * const list = List.of(1, 2, 3);
+   *
+   * // Using the Option for the last element
+   * const lastOption = list.last();
+   * console.log(lastOption.isSome() ? lastOption.unwrap() : "List is empty"); // 3
+   *
+   * // Using the Option for an empty list
+   * const emptyList = List.empty<number>();
+   * const emptyOption = emptyList.last();
+   * console.log(emptyOption.isSome() ? emptyOption.unwrap() : "List is empty"); // "List is empty"
    * ```
    */
-  last(): T | undefined {
+  last(): Option<T> {
     return this.at(-1);
   }
 
@@ -840,16 +908,27 @@ export class List<T> implements Iterable<T> {
   }
 
   /**
-   * Returns a random element from the list, or undefined if the list is empty.
+   * Returns a random element from the list wrapped in an `Option<T>`. If the list is empty, it returns `None`.
    *
-   * @return {T | undefined} A random element from the list, or undefined if the list is empty.
+   * This method selects a random element using a uniform distribution, meaning each element has an equal chance of being selected.
+   *
+   * @return {Option<T>} An `Option<T>` containing a random element from the list if the list is not empty, or `None` if the list is empty.
    * @example
    * ```ts
-   * const randomElement = List.of(1, 2, 3).random(); // 1 or 2 or 3
-   * const empty = List.empty().random(); // undefined
+   * const list = List.of(1, 2, 3);
+   *
+   * // Using the Option for a random element
+   * const randomOption = list.random();
+   * console.log(randomOption.isSome() ? `Random element: ${randomOption.unwrap()}` : "List is empty");
+   * // Outputs: "Random element: 2" (the actual number may vary)
+   *
+   * // Using the Option for an empty list
+   * const emptyList = List.empty<number>();
+   * const emptyOption = emptyList.random();
+   * console.log(emptyOption.isSome() ? `Random element: ${emptyOption.unwrap()}` : "List is empty"); // "List is empty"
    * ```
    */
-  random(): T | undefined {
+  random(): Option<T> {
     const randomIndex = Math.floor(Math.random() * this.size);
     return this.at(randomIndex);
   }
@@ -1247,11 +1326,12 @@ export class List<T> implements Iterable<T> {
     if (index < 0) {
       index = this.size + index;
     }
-    const item = this.#array[index];
-    if (!item) {
+    if (index < 0 || index >= this.size) {
       return this.slice();
     }
-    return this.replaceAt(index, callback(item, index));
+    const arr = this.#array.slice();
+    arr[index] = callback(arr[index], index);
+    return new List(arr);
   }
 
   /**

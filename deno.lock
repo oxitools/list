@@ -2,11 +2,22 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "jsr:@oxi/core@^0.2.0": "jsr:@oxi/core@0.2.0"
+      "jsr:@oxi/core@^0.2.0": "jsr:@oxi/core@0.2.1",
+      "jsr:@oxi/core@^0.2.1": "jsr:@oxi/core@0.2.1",
+      "jsr:@oxi/option@^0.1.0": "jsr:@oxi/option@0.1.0"
     },
     "jsr": {
       "@oxi/core@0.2.0": {
         "integrity": "c208de63ef72e9d0356ba0905b7442804a65c433b395af2db5fbdbcf5d59fb76"
+      },
+      "@oxi/core@0.2.1": {
+        "integrity": "36e340fb6d9fd29013c23cfd867645390e39f7b9b253c28514c2b5cb97638b5e"
+      },
+      "@oxi/option@0.1.0": {
+        "integrity": "1da2fddd3456feba805987589beca6d0d3cbc8062c0b6ad305c370fea6a3f835",
+        "dependencies": [
+          "jsr:@oxi/core@^0.2.1"
+        ]
       }
     }
   },
@@ -46,7 +57,8 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oxi/core@^0.2.0"
+      "jsr:@oxi/core@^0.2.0",
+      "jsr:@oxi/option@^0.1.0"
     ]
   }
 }
