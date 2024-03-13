@@ -108,6 +108,21 @@ export class List<T> implements Iterable<T> {
   }
 
   /**
+   * Checks if a value is a `List` instance.
+   * @param value The value to check.
+   * @returns {value is List<unknown>} `true` if the value is a `List` instance, otherwise `false`.
+   * ```ts
+   * const list = List.of(1, 2, 3);
+   * console.log(List.isList(list)); // true
+   * console.log(List.isList([1, 2, 3])); // false
+   * ```
+   * @since 1.2.0
+   */
+  static isList(value: unknown): value is List<unknown> {
+    return value instanceof List;
+  }
+
+  /**
    * Creates an empty `List`.
    *
    * @template T The type of elements in the list.

@@ -22,6 +22,13 @@ function assertNone<T>(option: Option<T>): asserts option is Option<T> {
   assertFalse(option.isSome(), "expected None, got Some");
 }
 
+Deno.test("List#isList", () => {
+  const list = List.of(1, 2, 3);
+  assert(List.isList(list));
+  assertFalse(List.isList([1, 2, 3]));
+  assertFalse(List.isList(new Set([1, 2, 3])));
+});
+
 Deno.test("List#empty", () => {
   const list = List.empty<number>();
   assertEquals([...list], []);
