@@ -893,6 +893,71 @@ export class List<T> implements Iterable<T> {
   }
 
   /**
+   * Partitions the elements of the list into two groups based on a type-guard predicate.
+   * The first group contains all elements for which the predicate returns true (of type U),
+   * and the second group contains all the elements for which it returns false (type Exclude<T, U>).
+   *
+   * @template T The base type of elements in the list.
+   * @template U The subset of T that matches the predicate.
+   *
+   * @param { (item: T, index: number) => item is U } predicate - A type-guard predicate function to test each element of the list.
+   *    The function should return `true` for elements to be included in the first group, and `false` for those to be included in the second.
+   * @returns {[List<U>, List<Exclude<T, U>>]} A tuple containing two lists:
+   *    the first with elements that satisfy the type-guard predicate, and the second with those that do not.
+   *
+   * @example
+   * ```ts
+   * // Assuming ListItemType is the base type and MatchedListItemType is a subtype of ListItemType
+   * const myList = List.of(...);
+   * const [matched, notMatched] = myList.partition((item, index) => item instanceof MatchedListItemType);
+   * ```
+   * @since 1.1.0
+   */
+  partition<U extends T>(
+    predicate: (item: T, index: number) => item is U,
+  ): [List<U>, List<Exclude<T, U>>];
+
+  /**
+   * Partitions the elements of the list into two groups based on a boolean-returning predicate.
+   * The first group contains all elements for which the predicate returns true,
+   * and the second group contains all the elements for which it returns false.
+   *
+   * @template T The type of elements in the list.
+   *
+   * @param { (item: T, index: number) => boolean } predicate - A predicate function to test each element of the list.
+   *    The function should return `true` for elements to be included in the first group, and `false` for those to be included in the second.
+   * @returns {[List<T>, List<T>]} A tuple containing two lists of the same type `T`:
+   *    the first with elements that satisfy the predicate, and the second with those that do not.
+   *
+   * @example
+   * ```ts
+   * const myList = List.of(...)
+   * const [truthyItems, falsyItems] = myList.partition((item, index) => Boolean(item));
+   * ```
+   * @since 1.1.0
+   */
+  partition(
+    predicate: (item: T, index: number) => boolean,
+  ): [List<T>, List<T>];
+
+  partition(
+    predicate: (item: T, index: number) => boolean,
+  ): [List<T>, List<T>] {
+    assert(typeof predicate === "function", "'predicate' must be a function.");
+    const matched: T[] = [];
+    const unmatched: T[] = [];
+    for (let i = 0; i < this.size; i++) {
+      const item = this.#array[i];
+      if (predicate(item, i)) {
+        matched.push(item);
+      } else {
+        unmatched.push(item);
+      }
+    }
+    return [new List(matched), new List(unmatched)];
+  }
+
+  /**
    * Adds new elements to the beginning of the list and returns a new list.
    *
    * @param {...ReadonlyArray<T>} items The items to prepend to the list.
@@ -1016,6 +1081,39 @@ export class List<T> implements Iterable<T> {
       return new List(this.#array.toReversed());
     }
     return new List(this.#array.slice().reverse());
+  }
+
+  /**
+   * Rotates the elements of the List by the specified number of positions.
+   * Positive values rotate to the right, negative values rotate to the left.
+   *
+   * @param {number} count The number of positions to rotate the elements. Positive values rotate to the right, negative values rotate to the left.
+   * @returns {List<T>} A new List with the elements rotated.
+   * @since 1.1.0
+   */
+  rotate(count: number): List<T> {
+    const length = this.#array.length;
+    if (length === 0) {
+      return this;
+    }
+
+    const normalizedCount = count % length;
+
+    if (normalizedCount < 0) {
+      return new List([
+        ...this.#array.slice(-normalizedCount),
+        ...this.#array.slice(0, -normalizedCount),
+      ]);
+    }
+
+    if (normalizedCount > 0) {
+      return new List([
+        ...this.#array.slice(length - normalizedCount),
+        ...this.#array.slice(0, length - normalizedCount),
+      ]);
+    }
+
+    return this.slice();
   }
 
   /**

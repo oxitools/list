@@ -302,6 +302,18 @@ Deno.test("List.move", () => {
   assertEquals([...result3], [1, 2, 3, 4, 5]);
 });
 
+Deno.test("List.partition", () => {
+  const list = List.of(1, 2, 3, 4, 5);
+  const [match, mismatch] = list.partition((x) => x % 2 === 0);
+  assertEquals([...match], [2, 4]);
+  assertEquals([...mismatch], [1, 3, 5]);
+
+  const list2 = List.from([1, 2, null, 3, undefined, 4]);
+  const [match2, mismatch2] = list2.partition(isDefined);
+  assertEquals([...match2], [1, 2, 3, 4]);
+  assertEquals([...mismatch2], [null, undefined]);
+});
+
 Deno.test("List.prepend", () => {
   const list = List.of(1, 2, 3);
   assertEquals([...list.prepend(0)], [0, 1, 2, 3]);
@@ -364,6 +376,24 @@ Deno.test("List.reverse", () => {
   const list = List.of(1, 2, 3);
   const result = list.reverse();
   assertEquals([...result], [3, 2, 1]);
+});
+
+Deno.test('List.rotate("left")', () => {
+  const list = List.of(1, 2, 3, 4, 5);
+  assertEquals([...list.rotate(-1)], [2, 3, 4, 5, 1]);
+  assertEquals([...list.rotate(-2)], [3, 4, 5, 1, 2]);
+  assertEquals([...list.rotate(-3)], [4, 5, 1, 2, 3]);
+  assertEquals([...list.rotate(-4)], [5, 1, 2, 3, 4]);
+  assertEquals([...list.rotate(-5)], [1, 2, 3, 4, 5]);
+});
+
+Deno.test('List.rotate("right")', () => {
+  const list = List.of(1, 2, 3, 4, 5);
+  assertEquals([...list.rotate(1)], [5, 1, 2, 3, 4]);
+  assertEquals([...list.rotate(2)], [4, 5, 1, 2, 3]);
+  assertEquals([...list.rotate(3)], [3, 4, 5, 1, 2]);
+  assertEquals([...list.rotate(4)], [2, 3, 4, 5, 1]);
+  assertEquals([...list.rotate(5)], [1, 2, 3, 4, 5]);
 });
 
 Deno.test("List.shuffle maintains list length", () => {
